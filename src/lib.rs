@@ -121,7 +121,7 @@ impl<T: AsRef<[u8]> + AsMut<[u8]>> LogBuffer<T> {
         let buffer = self.buffer.as_mut();
         for i in 0..buffer.len() {
             if is_utf8_leader(buffer[i]) {
-                return core::str::from_utf8(&buffer[i..]).unwrap()
+                unsafe { return core::str::from_utf8_unchecked(&buffer[i..]) }
             }
         }
         return ""
@@ -141,9 +141,9 @@ impl<T: AsRef<[u8]> + AsMut<[u8]>> LogBuffer<T> {
         self.rotate();
 
         let buffer = self.buffer.as_mut();
-        for i in 0..buffer.len() {
-            if i > 0 && buffer[i - 1] == b'\n' {
-                let slice = core::str::from_utf8(&buffer[i..]).unwrap();
+        for i in 1..buffer.len() {
+            if buffer[i - 1] == b'\n' {
+                let slice = unsafe { core::str::from_utf8_unchecked(&buffer[i..]) };
                 return slice.lines()
             }
         }
